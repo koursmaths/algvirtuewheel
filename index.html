@@ -1337,42 +1337,6 @@
             margin: 0;
         }
 
-        /* Control cluster mirrored from the Ring Controls screen and floated
-           under the wheel, so the middle screen is usable on its own. */
-        .screen-wheel .wheel-dock {
-            position: absolute;
-            left: 50%;
-            bottom: 1%;
-            transform: translateX(-50%);
-            z-index: 6;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            max-width: 96vw;
-            /* Only the keys take the pointer, so ring drags still work
-               between them. */
-            pointer-events: none;
-        }
-
-        .screen-wheel .wheel-dock > * { pointer-events: auto; }
-
-        .screen-wheel .wheel-dock .cogwheel-controls {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
-            margin: 0;
-            position: static;
-        }
-
-        .screen-wheel .wheel-dock .cogwheel-controls button { font-size: 0.3rem; padding: 8px 14px; }
-        .screen-wheel .wheel-dock .ring-speed-label { font-size: 0.26rem; }
-        .screen-wheel .wheel-dock .ring-speed-value { font-size: 0.28rem; min-width: 120px; }
-        .screen-wheel .wheel-dock .cogwheel-controls select.ring-speed-select { font-size: 0.3rem; padding: 6px 10px; }
-        .screen-wheel .wheel-dock .hint-bar { display: none; }
-
         /* ---- LOWER-RIGHT CONTROL SCREEN ---- */
         .screen-ctrl .cogwheel-controls { margin-top: 0; justify-content: flex-start; gap: 10px; }
         .screen-ctrl .cogwheel-controls button { font-size: 0.34rem; padding: 9px 16px; }
@@ -1633,8 +1597,8 @@
         /* ============================================================
            HOLOGRAPHIC PEDESTAL
            The floor disc from the reference plates is tinted to the active
-           template; a rotating light ring sweeps around it and a projection
-           beam carries the blinking output medallion above the floor.
+           template; a projection beam rises out of it, threaded through a
+           glowing ring, and carries the blinking output medallion.
            ============================================================ */
         /* The whole rig is a 3D scene: the container is the camera, the rotor
            is laid flat on the floor plane and the light cone stands up out of
@@ -1644,9 +1608,10 @@
             z-index: 0;
             --floor-tilt: 62deg;
             --floor-scale: 0.98;
-            /* The plate sits low in the stage: the column and the medallion
-               need the room above it. fitWheelStage rewrites this value. */
-            --floor-center-y: 78%;
+            /* The plate sits low in the stage, but not so low that the
+               petals hung on its outer rings run out of the panel: the flower
+               needs a hand's breadth of floor beyond the rim. */
+            --floor-center-y: 70%;
             --floor-camera: 1600px;
             perspective: var(--floor-camera);
             perspective-origin: 50% 50%;
@@ -1658,8 +1623,8 @@
             overflow: visible;
         }
 
-        /* Light cast by the rings onto the floor: the stone plate and its
-           rotating sweep sit underneath the wheel. */
+        /* Light cast by the rings onto the floor: the stone plate sits
+           underneath the wheel. */
         .holo-stage {
             position: absolute;
             left: 50%;
@@ -1736,37 +1701,56 @@
             animation: holoFloor 4.5s ease-in-out infinite;
         }
 
-        /* Sweeping light ring: a conic sweep flattened into the floor plane.
-           It is tied to --wheel-size (the wheel's own diameter, rewritten on
-           every draw), so the arcs ride the outer rim and zoom with the rings
-           instead of holding a fixed size. */
-        .holo-sweep {
+        /* Halo ring: the projection column is threaded through one glowing
+           band that floats above the plate, the way the reference plate
+           straps the light. It is a torus seen almost edge-on, so it is an
+           ellipse - not a spinning sweep around the floor. --ring-w, --ring-h
+           and --ring-y are rewritten by drawCogwheel from the column it wraps,
+           which is why the band follows the beam from ring to ring. */
+        .holo-ring {
             position: absolute;
             left: 50%;
-            top: var(--floor-center-y, 58%);
-            width: var(--wheel-size, 40vw);
-            aspect-ratio: 1;
-            transform: translate(-50%, -50%) scaleY(0.4535);
+            top: var(--ring-y, 46%);
+            width: var(--ring-w, 30%);
+            height: var(--ring-h, 8%);
+            transform: translate(-50%, -50%);
             border-radius: 50%;
-            background: conic-gradient(from 0deg,
-                rgba(var(--accent-rgb), 0) 0deg,
-                rgba(var(--accent-rgb), 0.95) 38deg,
-                rgba(var(--accent-rgb), 0) 88deg,
-                rgba(var(--accent-rgb), 0) 196deg,
-                rgba(var(--secondary-rgb), 0.9) 244deg,
-                rgba(var(--secondary-rgb), 0) 296deg);
-            -webkit-mask-image: radial-gradient(circle closest-side, transparent 0 88%, #000 90% 98%, transparent 100%);
-            mask-image: radial-gradient(circle closest-side, transparent 0 88%, #000 90% 98%, transparent 100%);
-            filter: blur(1px) drop-shadow(0 0 10px rgba(var(--accent-rgb), 0.85));
-            animation: holoSweep 7s linear infinite;
+            /* Light thrown off the band into the air inside its hole. */
+            background: radial-gradient(ellipse at 50% 50%,
+                rgba(var(--accent-rgb), 0.1) 0 58%,
+                rgba(var(--accent-rgb), 0.03) 82%,
+                rgba(var(--accent-rgb), 0) 100%);
+            filter: drop-shadow(0 0 14px rgba(var(--accent-rgb), 0.4));
+            transition: width 0.35s ease, height 0.35s ease, top 0.35s ease;
+            animation: holoRing 5.2s ease-in-out infinite;
+        }
+
+        /* The band itself: an elliptical annulus lit from above and below, so
+           it reads as a torus seen slightly from above rather than as a flat
+           outline, and its two rims are what the eye catches first. */
+        .holo-ring::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: linear-gradient(180deg,
+                rgba(255, 255, 255, 0.95) 0%,
+                rgba(var(--accent-rgb), 0.6) 16%,
+                rgba(var(--accent-rgb), 0.12) 52%,
+                rgba(var(--accent-rgb), 0.6) 84%,
+                rgba(255, 255, 255, 0.92) 100%);
+            -webkit-mask-image: radial-gradient(closest-side, transparent 0 82%, #000 86% 100%);
+            mask-image: radial-gradient(closest-side, transparent 0 82%, #000 86% 100%);
+            filter: drop-shadow(0 0 10px rgba(var(--accent-rgb), 0.85));
         }
 
         /* Projection column: an elliptical cylinder, not a flat strip. Its
            silhouette is two rims that are the wheel's own circles seen at the
            same slant, so the column is literally the arc of a ring extruded
-           upward. --beam-size, --beam-base-y and --beam-height are rewritten
-           by drawCogwheel from the selected ring's geometry, which is also
-           what makes the column jump from ring to ring. */
+           upward. drawCogwheel hands it --beam-size, --beam-foot-h,
+           --beam-base-y and --beam-height straight from the selected ring, so
+           the column is exactly as wide as that ring's circle and jumps from
+           ring to ring with the selection. */
         .holo-beam {
             position: absolute;
             left: 50%;
@@ -1774,22 +1758,25 @@
             width: var(--beam-size, calc(var(--wheel-size, 40vw) * 0.55));
             height: var(--beam-height, 30%);
             transform: translate(-50%, -100%);
-            /* Lit walls only: both margins fade into the room, the middle
-               carries the light, and the body dims as it climbs. */
+            /* The lit walls sit on the very edges of the box, so the column's
+               silhouette is the ring's diameter to the pixel, while the body
+               stays sheer enough to read the flower through it. */
             background:
                 linear-gradient(90deg,
-                    rgba(var(--accent-rgb), 0) 0%,
-                    rgba(var(--accent-rgb), 0.42) 5%,
-                    rgba(var(--accent-rgb), 0.12) 19%,
-                    rgba(var(--accent-rgb), 0.26) 50%,
-                    rgba(var(--accent-rgb), 0.12) 81%,
-                    rgba(var(--accent-rgb), 0.42) 95%,
-                    rgba(var(--accent-rgb), 0) 100%),
+                    rgba(var(--accent-rgb), 0.55) 0%,
+                    rgba(var(--accent-rgb), 0.1) 7%,
+                    rgba(var(--accent-rgb), 0.18) 24%,
+                    rgba(var(--accent-rgb), 0.24) 50%,
+                    rgba(var(--accent-rgb), 0.18) 76%,
+                    rgba(var(--accent-rgb), 0.1) 93%,
+                    rgba(var(--accent-rgb), 0.55) 100%),
                 linear-gradient(0deg,
-                    rgba(var(--accent-rgb), 0.34) 0%,
-                    rgba(var(--accent-rgb), 0.16) 48%,
+                    rgba(var(--accent-rgb), 0) 0%,
+                    rgba(var(--accent-rgb), 0.12) 9%,
+                    rgba(var(--accent-rgb), 0.16) 46%,
                     rgba(var(--accent-rgb), 0.02) 100%);
-            filter: blur(1.5px);
+            box-shadow: inset 0 0 14px rgba(var(--accent-rgb), 0.3);
+            filter: blur(1.2px);
             mix-blend-mode: screen;
             transition: width 0.35s ease, top 0.35s ease, height 0.35s ease;
             animation: holoBeam 3.6s ease-in-out infinite;
@@ -1805,7 +1792,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            height: calc(var(--beam-size, 40vw) * 0.4535);
+            height: var(--beam-foot-h, calc(var(--beam-size, 40vw) * 0.469));
             transform: translateY(50%);
             border-radius: 50%;
             border: 2px solid rgba(var(--accent-rgb), 0.9);
@@ -1960,9 +1947,9 @@
             }
         }
 
-        @keyframes holoSweep {
-            from { transform: translate(-50%, -50%) scaleY(0.4535) rotate(0deg); }
-            to   { transform: translate(-50%, -50%) scaleY(0.4535) rotate(360deg); }
+        @keyframes holoRing {
+            0%, 100% { opacity: 0.74; }
+            50%      { opacity: 1; }
         }
 
         @keyframes holoBeam {
@@ -2388,11 +2375,10 @@
             </div>
             <div class="wheel-stage">
                 <div class="cogwheel-container" id="cogwheelContainer">
-                    <!-- Floor fog + rotating holographic light; the target
-                         medallion floats in the projection cylinder above it. -->
+                    <!-- Floor fog; the target medallion floats in the
+                         projection cylinder that rises out of it. -->
                     <div class="holo-stage" aria-hidden="true">
                         <div class="holo-floor"></div>
-                        <div class="holo-sweep"></div>
                     </div>
                     <!-- The rings are a shallow stepped pyramid on the floor
                          plane (3D) and a column of light climbs out of the hub. -->
@@ -2401,6 +2387,7 @@
                     </div>
                     <div class="holo-front" aria-hidden="true">
                         <div class="holo-beam"></div>
+                        <div class="holo-ring"></div>
                         <div class="holo-glow"></div>
                     </div>
                     <div class="derived-quality positive" id="derivedQuality">
@@ -2409,9 +2396,6 @@
                         <div class="dq-formula" id="dqFormula">Prime target • no ring deviation</div>
                     </div>
                 </div>
-                <!-- The ring controls are mirrored here from the lower-right
-                     screen, so the middle screen works on its own. -->
-                <div class="wheel-dock" id="wheelDock"></div>
             </div>
         </section>
 
@@ -2930,73 +2914,8 @@
             if (summary) summary.textContent = spins === 0 ? 'no spins' : spins + (spins === 1 ? ' ring spinning' : ' rings spinning');
         }
 
-        // The ring controls live in the lower-right screen; the middle screen
-        // carries its own copy floated under the wheel. The copy is a clone
-        // with every id stripped, and each key forwards to the real control,
-        // so one piece of state still drives both.
-        function setupWheelDock() {
-            const dock = document.getElementById('wheelDock');
-            const source = document.getElementById('ctrlPaneControls');
-            if (!dock || !source || dock.dataset.ready) return;
-
-            const clone = source.cloneNode(true);
-            clone.removeAttribute('id');
-            clone.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
-            dock.appendChild(clone);
-
-            const real = source.querySelectorAll('button, select');
-            clone.querySelectorAll('button, select').forEach((mirror, i) => {
-                const target = real[i];
-                if (!target) return;
-                if (mirror.tagName === 'SELECT') {
-                    mirror.addEventListener('change', () => {
-                        target.value = mirror.value;
-                        target.dispatchEvent(new Event('change', { bubbles: true }));
-                    });
-                } else {
-                    mirror.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        target.click();
-                    });
-                }
-            });
-
-            dock.dataset.ready = '1';
-            syncWheelDock();
-        }
-
-        // Carry the live state of the real controls over to the copy on the
-        // wheel: labels, ring list, chosen ring and the speed readout.
-        function syncWheelDock() {
-            const dock = document.getElementById('wheelDock');
-            const source = document.getElementById('ctrlPaneControls');
-            if (!dock || !source || !dock.dataset.ready) return;
-
-            const real = source.querySelectorAll('button, select');
-            dock.querySelectorAll('button, select').forEach((mirror, i) => {
-                const target = real[i];
-                if (!target) return;
-                if (mirror.tagName === 'SELECT') {
-                    if (mirror.options.length !== target.options.length) {
-                        mirror.innerHTML = target.innerHTML;
-                        mirror.value = target.value;
-                    } else if (mirror.value !== target.value) {
-                        mirror.value = target.value;
-                    }
-                } else if (mirror.textContent !== target.textContent) {
-                    mirror.textContent = target.textContent;
-                }
-                mirror.classList.toggle('active', target.classList.contains('active'));
-            });
-
-            const realValue = source.querySelector('.ring-speed-value');
-            const mirrorValue = dock.querySelector('.ring-speed-value');
-            if (realValue && mirrorValue) {
-                mirrorValue.textContent = realValue.textContent;
-                mirrorValue.style.color = realValue.style.color;
-            }
-        }
+        // The ring controls live in the lower-right screen only: the middle
+        // screen is the hologram itself and carries no keys of its own.
 
         function adjustRingSpeed(layer, delta) {
             if (!Number.isFinite(layer)) return;
@@ -3069,15 +2988,26 @@
             };
         }
 
-        // Ring labels are drawn at the full 3x size. Only when a ring's arc is
-        // too short for its longest label does the whole ring scale down, so the
-        // labels never pile up on top of each other.
-        function fitLabelFont(ctx, labels, basePx, arcPerLabel, fontFamily) {
-            if (!(arcPerLabel > 0) || labels.length === 0) return basePx;
-            ctx.font = `${basePx}px ${fontFamily}`;
-            const widest = labels.reduce((max, label) => Math.max(max, ctx.measureText(label).width), 1);
-            const scale = Math.min(1, (arcPerLabel * 0.94) / widest);
-            return Math.max(basePx * 0.45, basePx * scale);
+        // Petal lettering runs along the petal's axis, so the length that has
+        // to fit is the stretch between hub and rim; the type size is then
+        // capped by the petal's width. Anything longer shrinks instead of
+        // spilling across the neighbouring petal.
+        function fitRadialFont(ctx, text, basePx, room, height, fontFamily, italic) {
+            const prefix = italic ? 'italic ' : '';
+            ctx.font = `${prefix}${basePx}px ${fontFamily}`;
+            const width = ctx.measureText(text).width || 1;
+            const size = Math.min(basePx, (basePx * room) / width, height);
+            return Math.max(8, size);
+        }
+
+        // Virtue colours are authored as #rrggbb and the flower needs them at
+        // many opacities, so they are re-emitted as rgba strings.
+        function withAlpha(hex, alpha) {
+            const c = hex.replace('#', '');
+            const r = parseInt(c.substr(0, 2), 16);
+            const g = parseInt(c.substr(2, 2), 16);
+            const b = parseInt(c.substr(4, 2), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
         }
 
         function drawCogwheel(targetName) {
@@ -3126,7 +3056,13 @@
             const beamRadii = getRingRadii(beamRing, numLayers, maxRadius);
             const tiltSquash = Math.cos((FLOOR_PROJECTION.tiltDeg * Math.PI) / 180) * FLOOR_PROJECTION.scale;
             const stageHeight = rect.height;
-            const beamDiameter = (beamRadii.outer * 2) / dpr;
+            // The column is the selected ring's own circle stood on end: the
+            // band's outer diameter, taken through the same floor scale the
+            // rotor applies, so the light is exactly as wide as the ring it
+            // rises out of. The foot ellipse is that circle seen at the
+            // floor's own slant.
+            const beamDiameter = (beamRadii.outer * 2 / dpr) * FLOOR_PROJECTION.scale;
+            const beamFoot = beamDiameter * Math.cos((FLOOR_PROJECTION.tiltDeg * Math.PI) / 180);
             const beamBase = FLOOR_PROJECTION.centerY * stageHeight
                 - (getRingLift(beamRing, numLayers, maxRadius) / dpr) * tiltSquash;
             // The circle keeps the column's proportions without outgrowing the
@@ -3138,11 +3074,22 @@
             // cap and the word is never cut by a rim.
             const beamHeight = Math.max(stageHeight * 0.12, beamBase - (targetY + targetSize * 0.42));
 
+            // The halo ring straps the column: its hole clears the beam and
+            // its band sits most of the way up, so the light is visibly
+            // threaded through it. It is kept inside the plate's footprint so
+            // a wide ring never pushes it over the side screens.
+            const wheelDiameter = (maxRadius * 2) / dpr;
+            const ringWidth = Math.min(beamDiameter * 1.2, wheelDiameter * 1.3);
+
             container.style.setProperty('--beam-size', beamDiameter + 'px');
+            container.style.setProperty('--beam-foot-h', beamFoot + 'px');
             container.style.setProperty('--beam-base-y', beamBase + 'px');
             container.style.setProperty('--beam-height', beamHeight + 'px');
             container.style.setProperty('--target-size', targetSize + 'px');
             container.style.setProperty('--target-y', targetY + 'px');
+            container.style.setProperty('--ring-w', ringWidth + 'px');
+            container.style.setProperty('--ring-h', ringWidth * 0.26 + 'px');
+            container.style.setProperty('--ring-y', (beamBase - beamHeight * 0.62) + 'px');
 
             const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, maxRadius);
             bgGrad.addColorStop(0, `rgba(${theme.accentRgb}, 0.02)`);
@@ -3265,75 +3212,17 @@
                     ctx.shadowBlur = 0;
                 }
 
-                if (fillLevel < 1) {
-                    const startAngle = -Math.PI / 2 + ringRot + fillLevel * Math.PI * 2;
-                    const endAngle = -Math.PI / 2 + ringRot + Math.PI * 2;
-
-                    if (fillLevel < 0.92) {
-                        const negComponents = components;
-                        const negArc = ((endAngle - startAngle) * midRadius) / Math.max(1, negComponents.length);
-                        const negLabels = negComponents.map(c => '− ' + (antagonists[c] || '—'));
-                        const negFont = fitLabelFont(ctx, negLabels, 27 * dpr, negArc, theme.canvasFont);
-                        for (let j = 0; j < negComponents.length; j++) {
-                            const frac = (j + 0.5) / negComponents.length;
-                            const angle = startAngle + frac * (endAngle - startAngle);
-                            const lx = cx + midRadius * Math.cos(angle);
-                            const ly = cy + midRadius * Math.sin(angle);
-
-                            const antName = antagonists[negComponents[j]] || '—';
-                            const baseColor = valueAlgebra[negComponents[j]] ? valueAlgebra[negComponents[j]].color : '#888';
-                            const negColor = mixHex(baseColor, theme.bright, 0.38);
-
-                            ctx.save();
-                            ctx.font = `italic ${negFont}px ${theme.canvasFont}`;
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'middle';
-                            ctx.shadowColor = 'rgba(0,0,0,0.9)';
-                            ctx.shadowBlur = 6;
-                            ctx.translate(lx, ly);
-                            let rot = angle + Math.PI / 2;
-                            if (angle > 0 && angle < Math.PI) rot += Math.PI;
-                            ctx.rotate(rot);
-                            ctx.fillStyle = negColor;
-                            ctx.fillText('− ' + antName, 0, 0);
-                            ctx.restore();
-                        }
-                    }
-                }
-
-                if (fillLevel > 0.02 && components.length > 0) {
-                    const startAngle = -Math.PI / 2 + ringRot;
-                    const endAngle = -Math.PI / 2 + ringRot + fillLevel * Math.PI * 2;
-                    const labelArc = ((endAngle - startAngle) * midRadius) / components.length;
-                    const labelFont = fitLabelFont(ctx, components, 30 * dpr, labelArc, theme.canvasFont);
-
-                    ctx.font = `${labelFont}px ${theme.canvasFont}`;
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.shadowColor = 'rgba(0,0,0,0.9)';
-                    ctx.shadowBlur = 6;
-
-                    for (let j = 0; j < components.length; j++) {
-                        const frac = (j + 0.5) / components.length;
-                        const angle = startAngle + frac * (endAngle - startAngle);
-                        const lx = cx + midRadius * Math.cos(angle);
-                        const ly = cy + midRadius * Math.sin(angle);
-
-                        ctx.save();
-                        ctx.translate(lx, ly);
-                        let rot = angle + Math.PI / 2;
-                        if (angle > 0 && angle < Math.PI) rot += Math.PI;
-                        ctx.rotate(rot);
-                        ctx.fillStyle = theme.bright;
-                        ctx.fillText(components[j], 0, 0);
-                        ctx.restore();
-                    }
-                    ctx.shadowBlur = 0;
-                }
+                // Both the virtue and the antagonist of this ring are lettered
+                // on its petals by drawVirtuePetals, never around the arc, so
+                // the tread stays clean under the flower.
 
                 // Back down off this ring's step for the next layer.
                 ctx.restore();
             }
+
+            // The flower of petals is the label layer: every virtue is
+            // lettered along its own petal instead of around the ring arcs.
+            drawVirtuePetals(ctx, cx, cy, maxRadius, theme, dpr, layers);
 
             // The hub sits on the top step of the pyramid.
             ctx.save();
@@ -3378,11 +3267,204 @@
             document.getElementById('zoomLevel').textContent = Math.round(zoomFactor * 100) + '%';
         }
 
+        // ============================================================
+        // VIRTUE PETALS
+        // ============================================================
+        // The virtues are no longer lettered around the ring arcs. Every one
+        // owns a long petal that grows out of its own layer's ring - the root
+        // sits inside that band's tread, so the petal is anchored on the ring
+        // that carries it and runs on outward from there - and its name runs
+        // along the petal's own axis, as on the reference flower plate. Each
+        // layer keeps a sector of the circle to itself, so petals of different
+        // rings can never collide, and a petal that is still outside its
+        // ring's fill is drawn muted, with its antagonist lettered beneath it.
+        const PETAL_SECTOR_GAP = 0.12;   // empty arc between two layers' sectors
+        const PETAL_ARC_SHARE = 0.4;     // half the slot one petal's body takes
+        const PETAL_ROOT = 0.18;         // how deep into its own band a root sits
+        const PETAL_LENGTH = 0.46;       // petal length, as a share of the radius
+        const PETAL_REACH = 1.4;         // no petal tip runs past this radius
+        const PETAL_EXTRUDE = 0.085;     // slab thickness, thrown down the floor
+
+        // Petal outline in its own frame: +X runs out of the ring, the base is
+        // pinched and the tip is a full round lobe - which is what separates a
+        // flower petal from a pie slice.
+        function petalPath(ctx, inner, outer, tipHalf, baseHalf) {
+            ctx.beginPath();
+            ctx.moveTo(inner, -baseHalf);
+            ctx.lineTo(outer - tipHalf, -tipHalf);
+            ctx.arc(outer - tipHalf, 0, tipHalf, -Math.PI / 2, Math.PI / 2);
+            ctx.lineTo(inner, baseHalf);
+            ctx.quadraticCurveTo(inner - baseHalf * 0.9, 0, inner, -baseHalf);
+            ctx.closePath();
+        }
+
+        function drawVirtuePetals(ctx, cx, cy, maxRadius, theme, dpr, layers) {
+            const numLayers = layers.length;
+            const groups = [];
+            layers.forEach((layerKey, index) => {
+                const components = getLayerComponentsOrdered(currentTarget, parseInt(layerKey));
+                if (components.length) groups.push({ index, layer: parseInt(layerKey), components });
+            });
+            const total = groups.reduce((sum, group) => sum + group.components.length, 0);
+            if (!total) return;
+
+            const usable = Math.PI * 2 - PETAL_SECTOR_GAP * groups.length;
+            let cursor = -Math.PI / 2 + cogwheelRotation;
+
+            for (const group of groups) {
+                const count = group.components.length;
+                const sector = usable * (count / total);
+                const slot = sector / count;
+                // A ring that carries a single virtue would otherwise open one
+                // petal across most of the circle; capping its arc keeps even
+                // that case reading as a petal.
+                const halfArc = Math.min(slot, 0.9) * PETAL_ARC_SHARE;
+                const fill = getFillForLayer(group.layer, currentTarget);
+                const isHovered = (hoveredRing === group.index);
+
+                // A spinning ring drags its petals with it, but the drift is
+                // folded into a single slot, so a petal can never leave its
+                // ring's sector and land on a neighbour. A ring that carries
+                // only one virtue gets one narrow petal near the top of its
+                // sector instead of a blade swinging round the whole circle.
+                const span = count === 1 ? Math.min(sector, 0.9) : slot;
+                const spin = ((getRingAngle(group.layer) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+                const drift = (spin / (Math.PI * 2)) * span;
+
+                // The petal is rooted in its own ring - a third of the way in
+                // from that band's outer rim - and runs on outward past the
+                // wheel's rim, so it reads as a blade growing out of the step
+                // that names it. The rings stand on their own lift, so a petal
+                // leaves the tread it is anchored on, not the floor.
+                const ring = getRingRadii(group.index, numLayers, maxRadius);
+                const band = ring.outer - ring.inner;
+                const root = ring.outer - band * PETAL_ROOT;
+                const tip = Math.min(root + maxRadius * PETAL_LENGTH, maxRadius * PETAL_REACH);
+                const length = tip - root;
+                const lift = getRingLift(group.index, numLayers, maxRadius);
+                const fan = Math.min(halfArc, 1.2);
+
+                // Wide at the lobe and pinched at the root, but never wider
+                // than the slot can hold where it ends.
+                const tipHalf = Math.min(maxRadius * 0.16,
+                    Math.max(10 * dpr, tip * Math.sin(fan) * 0.95));
+                const baseHalf = Math.min(tipHalf * 0.68,
+                    Math.max(8 * dpr, root * Math.sin(fan) * 0.82));
+
+                // The slab is thrown down the floor plane - toward the viewer -
+                // so a lit face stands proud of a darker side wall.
+                const extrude = maxRadius * PETAL_EXTRUDE;
+
+                for (let j = 0; j < count; j++) {
+                    const name = group.components[j];
+                    const angle = cursor + (count === 1 ? span * 0.5 : slot * (j + 0.5)) + drift;
+                    // A virtue inside its ring's filled arc is lit; the rest
+                    // wait at the edge of the light, which is where the
+                    // antagonist names belong.
+                    const active = (j + 0.5) / count <= fill + 0.001;
+                    const color = valueAlgebra[name] ? valueAlgebra[name].color : '#888';
+                    const counter = (stackShowAntagonists && !active)
+                        ? '− ' + (antagonists[name] || '—') : '';
+
+                    ctx.save();
+                    ctx.translate(cx, cy - lift);
+                    ctx.rotate(angle);
+
+                    // Global +Y in this turned frame: the extrusion vector, so
+                    // the wall is cast toward the viewer, not off to the side.
+                    const ox = extrude * Math.sin(angle);
+                    const oy = extrude * Math.cos(angle);
+
+                    const face = ctx.createLinearGradient(root, 0, tip, 0);
+                    face.addColorStop(0, withAlpha(color, active ? 0.16 : 0.05));
+                    face.addColorStop(0.58, withAlpha(color, active ? 0.3 : 0.1));
+                    face.addColorStop(1, withAlpha(color, active ? 0.52 : 0.16));
+
+                    // Cast shadow, then the side wall, then the lit face: the
+                    // three stacked offsets are what make the petal a slab
+                    // standing on the floor rather than a decal on it.
+                    ctx.save();
+                    ctx.translate(ox * 2.1, oy * 2.1);
+                    petalPath(ctx, root, tip, tipHalf, baseHalf);
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.36)';
+                    ctx.fill();
+                    ctx.restore();
+
+                    ctx.save();
+                    ctx.translate(ox, oy);
+                    petalPath(ctx, root, tip, tipHalf, baseHalf);
+                    ctx.fillStyle = withAlpha(mixHex(color, '#03101a', 0.62), 0.95);
+                    ctx.fill();
+                    ctx.strokeStyle = withAlpha(color, active ? 0.55 : 0.3);
+                    ctx.lineWidth = Math.max(1, dpr);
+                    ctx.stroke();
+                    ctx.restore();
+
+                    petalPath(ctx, root, tip, tipHalf, baseHalf);
+                    // Dark bed first, colour wash on top: the lettering needs a
+                    // calm ground when it crosses the lit ring treads.
+                    ctx.fillStyle = 'rgba(3, 10, 17, 0.46)';
+                    ctx.fill();
+                    ctx.fillStyle = face;
+                    ctx.fill();
+                    ctx.strokeStyle = withAlpha(color, active ? 0.95 : 0.45);
+                    ctx.lineWidth = Math.max(1, dpr * (active ? 1.4 : 1));
+                    ctx.shadowColor = withAlpha(color, active ? 0.85 : 0.3);
+                    ctx.shadowBlur = (isHovered ? 24 : 13) * dpr;
+                    ctx.stroke();
+                    ctx.shadowBlur = 0;
+
+                    // Radial lettering: the word runs out of its ring along the
+                    // petal. On the left half of the flower the same line is
+                    // turned round, so no name is ever read upside down. The
+                    // word is measured against the width the petal actually has
+                    // where it sits, not against its lobe.
+                    const textHalf = baseHalf + (tipHalf - baseHalf) * 0.52;
+                    const textRadius = root + length * 0.52;
+                    const room = length * 0.9;
+                    const am = Math.atan2(Math.sin(angle), Math.cos(angle));
+                    const flip = am > Math.PI / 2 || am < -Math.PI / 2;
+                    const rowGap = counter ? textHalf * 0.42 : 0;
+
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+                    ctx.shadowBlur = 6 * dpr;
+
+                    const write = (text, basePx, fillStyle, lateral, maxHeight, italic) => {
+                        const prefix = italic ? 'italic ' : '';
+                        const size = fitRadialFont(ctx, text, basePx, room, maxHeight, theme.canvasFont, italic);
+                        ctx.save();
+                        ctx.translate(textRadius, lateral);
+                        if (flip) ctx.rotate(Math.PI);
+                        ctx.font = `${prefix}${size}px ${theme.canvasFont}`;
+                        ctx.fillStyle = fillStyle;
+                        ctx.fillText(text, 0, 0);
+                        ctx.restore();
+                    };
+
+                    write(name, 32 * dpr,
+                        active ? theme.bright : mixHex(color, theme.bright, 0.45),
+                        counter ? -rowGap : 0, textHalf * (counter ? 0.78 : 1.18), false);
+                    if (counter) {
+                        write(counter, 21 * dpr,
+                            withAlpha(mixHex(color, theme.bright, 0.3), 0.85),
+                            rowGap, textHalf * 0.78, true);
+                    }
+
+                    ctx.shadowBlur = 0;
+                    ctx.restore();
+                }
+
+                cursor += sector + PETAL_SECTOR_GAP;
+            }
+        }
+
         // The rings are laid on the floor with a CSS rotateX inside a
         // perspective camera, so screen points no longer map linearly onto the
         // canvas. These four values mirror the --floor-* custom properties and
         // are used to invert the projection for the pointer.
-        const FLOOR_PROJECTION = { tiltDeg: 62, scale: 0.98, centerY: 0.78, camera: 1600 };
+        const FLOOR_PROJECTION = { tiltDeg: 62, scale: 0.98, centerY: 0.7, camera: 1600 };
 
         function applyFloorProjection() {
             const container = document.getElementById('cogwheelContainer');
@@ -3603,7 +3685,6 @@
             if (!playBtn) return;
             playBtn.classList.toggle('active', autoRotate);
             playBtn.textContent = autoRotate ? '⏸ Pause' : '▶ Play';
-            syncWheelDock();
         }
 
         function stopCogwheelAnimation() {
@@ -4806,10 +4887,10 @@
             if (!stage || !container) return;
             const rect = stage.getBoundingClientRect();
             if (!rect.width || !rect.height) return;
-            // Sit the plate low in the stage, so the column and the target
-            // wheel have a clear stretch of air between themselves and the
-            // pyramid below.
-            FLOOR_PROJECTION.centerY = 0.78;
+            // Sit the plate in the lower half of the stage, leaving the air
+            // above it for the column and the target wheel and enough floor
+            // below for the petals hung on the outer rings.
+            FLOOR_PROJECTION.centerY = 0.7;
             applyFloorProjection();
         }
 
@@ -4820,7 +4901,6 @@
             updateDerivedQuality();
             updateMathOutput(currentTarget);
             refreshScreens();
-            syncWheelDock();
         }
 
         function updateSystem() {
@@ -4866,7 +4946,6 @@
             currentTarget = sel.value;
             stackItems = buildStack(currentTarget);
             rebuildRingSpeedControls();
-            setupWheelDock();
             selectedLayer = getRingLayers().length ? getRingLayers()[0] : 0;
 
             // Prime the history signature so loading the page does not log a
