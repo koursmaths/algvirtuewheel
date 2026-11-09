@@ -1,7 +1,7 @@
 # Qoder IDE local browser profile used for headless screenshot checks.
 # It holds cookies, session storage and cache databases, so it must never
 # be committed.
-.qoder/chrome-shot/
+.qoder/chrome-shot*/
 
 # Local tooling leftovers
 *.log
