@@ -1644,7 +1644,9 @@
             z-index: 0;
             --floor-tilt: 62deg;
             --floor-scale: 0.98;
-            --floor-center-y: 64%;
+            /* The plate sits low in the stage: the column and the medallion
+               need the room above it. fitWheelStage rewrites this value. */
+            --floor-center-y: 78%;
             --floor-camera: 1600px;
             perspective: var(--floor-camera);
             perspective-origin: 50% 50%;
@@ -1720,7 +1722,7 @@
             transform: translate(-50%, -50%);
             border-radius: 50%;
             background-image:
-                radial-gradient(circle at 50% 50%, rgba(var(--accent-rgb), 0.18), rgba(var(--accent-rgb), 0.02) 56%, rgba(0, 0, 0, 0.86) 100%),
+                radial-gradient(circle at 50% 50%, rgba(var(--accent-rgb), 0.15), rgba(var(--accent-rgb), 0.02) 56%, rgba(0, 0, 0, 0.86) 100%),
                 var(--floor-tex);
             background-size: 100% 100%, 100% 100%;
             background-position: center, center;
@@ -1759,48 +1761,71 @@
             animation: holoSweep 7s linear infinite;
         }
 
-        /* Projection beam: a straight-sided cylinder standing on the hub. It is
-           exactly one inner-ring diameter wide (--beam-size is written by the
-           draw from the first ring's geometry), so it stays cylindrical and
-           keeps filling only that ring however the wheel is zoomed. */
+        /* Projection column: an elliptical cylinder, not a flat strip. Its
+           silhouette is two rims that are the wheel's own circles seen at the
+           same slant, so the column is literally the arc of a ring extruded
+           upward. --beam-size, --beam-base-y and --beam-height are rewritten
+           by drawCogwheel from the selected ring's geometry, which is also
+           what makes the column jump from ring to ring. */
         .holo-beam {
             position: absolute;
             left: 50%;
-            top: 17%;
+            top: var(--beam-base-y, 78%);
             width: var(--beam-size, calc(var(--wheel-size, 40vw) * 0.55));
-            height: 42%;
-            transform: translateX(-50%);
-            /* Lit walls + lit core: the two bright verticals are the wall of
-               the cylinder, the middle is the light inside it, and both sides
-               fade out so the column has no hard box edges. */
+            height: var(--beam-height, 30%);
+            transform: translate(-50%, -100%);
+            /* Lit walls only: both margins fade into the room, the middle
+               carries the light, and the body dims as it climbs. */
             background:
                 linear-gradient(90deg,
                     rgba(var(--accent-rgb), 0) 0%,
-                    rgba(var(--accent-rgb), 0.3) 7%,
-                    rgba(var(--accent-rgb), 0.12) 22%,
-                    rgba(var(--accent-rgb), 0.34) 50%,
-                    rgba(var(--accent-rgb), 0.12) 78%,
-                    rgba(var(--accent-rgb), 0.3) 93%,
+                    rgba(var(--accent-rgb), 0.42) 5%,
+                    rgba(var(--accent-rgb), 0.12) 19%,
+                    rgba(var(--accent-rgb), 0.26) 50%,
+                    rgba(var(--accent-rgb), 0.12) 81%,
+                    rgba(var(--accent-rgb), 0.42) 95%,
                     rgba(var(--accent-rgb), 0) 100%),
                 linear-gradient(0deg,
-                    rgba(var(--accent-rgb), 0.42) 0%,
-                    rgba(var(--accent-rgb), 0.2) 50%,
+                    rgba(var(--accent-rgb), 0.34) 0%,
+                    rgba(var(--accent-rgb), 0.16) 48%,
                     rgba(var(--accent-rgb), 0.02) 100%);
-            -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 26%, #000 95%, transparent 100%);
-            mask-image: linear-gradient(180deg, transparent 0%, #000 26%, #000 95%, transparent 100%);
-            filter: blur(2px);
+            filter: blur(1.5px);
             mix-blend-mode: screen;
+            transition: width 0.35s ease, top 0.35s ease, height 0.35s ease;
             animation: holoBeam 3.6s ease-in-out infinite;
         }
 
-        /* Ambient bloom behind the target wheel. */
+        /* The foot of the cylinder: the circle it stands on, seen at the
+           floor's own slant. A cylinder viewed from slightly above shows only
+           this rim, which is why the column needs no crown ring — the
+           medallion caps it. */
+        .holo-beam::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: calc(var(--beam-size, 40vw) * 0.4535);
+            transform: translateY(50%);
+            border-radius: 50%;
+            border: 2px solid rgba(var(--accent-rgb), 0.9);
+            box-shadow:
+                0 0 26px rgba(var(--accent-rgb), 0.6),
+                inset 0 0 30px rgba(var(--accent-rgb), 0.5);
+            background: radial-gradient(ellipse at 50% 50%,
+                rgba(var(--accent-rgb), 0.26),
+                rgba(var(--accent-rgb), 0.08) 55%,
+                rgba(var(--accent-rgb), 0) 74%);
+        }
+
+        /* Ambient bloom behind the target wheel: it follows the medallion,
+           which is sized from the beam. */
         .holo-glow {
             position: absolute;
             left: 50%;
-            top: 25%;
-            height: 56%;
-            width: auto;
-            aspect-ratio: 1;
+            top: var(--target-y, 30%);
+            width: calc(var(--target-size, 190px) * 1.8);
+            height: calc(var(--target-size, 190px) * 1.8);
             transform: translate(-50%, -50%);
             border-radius: 50%;
             background: radial-gradient(circle, rgba(var(--accent-rgb), 0.15), rgba(var(--accent-rgb), 0) 68%);
@@ -1808,19 +1833,19 @@
         }
 
         /* The target quality is itself a cogwheel: a toothed rim that rocks
-           slowly on the light column, sized against the height of the stage so
-           it always has room above the pyramid. */
+           slowly on the light column. Its diameter is driven by the beam
+           (--target-size), so choosing a wider ring gives it a wider circle. */
         .derived-quality {
-            top: 27%;
-            height: 40%;
-            width: auto;
-            aspect-ratio: 1;
+            top: var(--target-y, 30%);
+            width: var(--target-size, 190px);
+            height: var(--target-size, 190px);
             min-width: 0;
             border: 0;
             /* Teeth hang off the rim, so the disc must not clip its children. */
             overflow: visible;
             background: radial-gradient(circle, rgba(var(--accent-rgb), 0.1) 0%, rgba(4, 12, 20, 0.42) 62%, rgba(4, 12, 20, 0.18) 74%, rgba(4, 12, 20, 0) 78%);
             box-shadow: none;
+            transition: width 0.35s ease, top 0.35s ease;
         }
 
         /* Toothed rim of the target cogwheel: 24 chunky teeth around the rim.
@@ -1854,11 +1879,27 @@
             pointer-events: none;
         }
 
-        .derived-quality .dq-tag { font-size: 0.3rem; }
-        .derived-quality .dq-formula { font-size: 0.3rem; max-height: none; }
+        /* The small print inside the medallion is set against the disc's own
+           width, so a narrow ring still shows a legible tag and formula. Both
+           are lifted above the name, whose glow and extruded side would
+           otherwise wash over them. */
+        .derived-quality .dq-tag {
+            font-size: clamp(0.13rem, calc(var(--target-size, 200px) * 0.062), 0.3rem);
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95);
+        }
+
+        .derived-quality .dq-formula {
+            font-size: clamp(0.11rem, calc(var(--target-size, 200px) * 0.05), 0.3rem);
+            max-height: none;
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95);
+        }
 
         /* The virtue itself runs the full width of the wheel, set too wide for
-           its box, in a rainbow that shifts colour as it spins. */
+           its box, in a rainbow that scrolls colour across the word. */
         .panel.screen-wheel .derived-quality .dq-name {
             /* The box hugs the word, so the clipped gradient paints every
                glyph even when the line runs wider than the disc. */
@@ -1867,17 +1908,31 @@
             font-size: 1.35rem;
             letter-spacing: 0.04em;
             white-space: nowrap;
+            /* Two periods of the rainbow in a double-width tile: the tile
+               repeats across the word, so scrolling it is seamless. */
             background-image: linear-gradient(90deg,
-                #ff2d75 0%, #ff8a3d 16%, #ffe23d 32%, #5dff9e 50%,
-                #35e0ff 66%, #8a6bff 83%, #ff2d75 100%);
-            background-size: 100% 100%;
-            background-repeat: no-repeat;
+                #ff2d75 0%, #ff8a3d 8%, #ffe23d 16%, #5dff9e 25%, #35e0ff 33%,
+                #8a6bff 41%, #ff2d75 50%, #ff8a3d 58%, #ffe23d 66%, #5dff9e 75%,
+                #35e0ff 83%, #8a6bff 91%, #ff2d75 100%);
+            background-size: 200% 100%;
+            background-repeat: repeat-x;
+            background-position: 0 0;
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
             -webkit-text-fill-color: transparent;
-            text-shadow: none;
-            animation: dqRainbow 6s linear infinite;
+            /* drop-shadow paints behind the glyphs, unlike text-shadow which
+               would cover a clipped background. The hard offsets build the
+               extruded side of the letters, the wide ones are the light
+               thrown off them. */
+            filter:
+                drop-shadow(0.04em 0.04em 0 rgba(4, 8, 16, 0.95))
+                drop-shadow(0.08em 0.08em 0 rgba(4, 8, 16, 0.85))
+                drop-shadow(0.12em 0.12em 0 rgba(4, 8, 16, 0.66))
+                drop-shadow(0 0 0.12em rgba(255, 255, 255, 0.65))
+                drop-shadow(0 0 0.4em rgba(var(--accent-rgb), 0.85))
+                drop-shadow(0 0 0.9em rgba(var(--accent-rgb), 0.55));
+            animation: dqSlide 5.5s linear infinite;
         }
 
         @keyframes dqRimWobble {
@@ -1887,9 +1942,9 @@
             75%      { transform: rotate(-4deg) scale(0.99); }
         }
 
-        @keyframes dqRainbow {
-            from { filter: hue-rotate(0deg); }
-            to   { filter: hue-rotate(360deg); }
+        @keyframes dqSlide {
+            from { background-position: 0 0; }
+            to   { background-position: 100% 0; }
         }
 
         @keyframes holoFloor {
@@ -3057,12 +3112,37 @@
             const numLayers = layers.length;
             const stairStep = maxRadius * RING_STAIR;
 
-            // The floor plate, the sweeping light and the light column are CSS
-            // layers, so hand them the drawn wheel's footprint every frame; it
-            // also keeps them in step with the zoom. The column is one inner
-            // ring diameter wide, measured off the same ring geometry.
+            // The floor plate and the sweeping light are CSS layers, so hand
+            // them the drawn wheel's footprint every frame; it also keeps them
+            // in step with the zoom.
             container.style.setProperty('--wheel-size', (maxRadius * 2) / dpr + 'px');
-            container.style.setProperty('--beam-size', (getRingRadii(0, numLayers, maxRadius).outer * 2) / dpr + 'px');
+
+            // The light column stands on the selected ring and climbs to the
+            // medallion. Its diameter is that ring's outer circle, its foot
+            // rests on the ring's own step of the pyramid and its crown is
+            // where the target circle floats, so picking another ring moves
+            // the column, resizes it and resizes the circle above it.
+            const beamRing = Math.max(0, layers.indexOf(String(selectedLayer)));
+            const beamRadii = getRingRadii(beamRing, numLayers, maxRadius);
+            const tiltSquash = Math.cos((FLOOR_PROJECTION.tiltDeg * Math.PI) / 180) * FLOOR_PROJECTION.scale;
+            const stageHeight = rect.height;
+            const beamDiameter = (beamRadii.outer * 2) / dpr;
+            const beamBase = FLOOR_PROJECTION.centerY * stageHeight
+                - (getRingLift(beamRing, numLayers, maxRadius) / dpr) * tiltSquash;
+            // The circle keeps the column's proportions without outgrowing the
+            // room above the pyramid or closing on the panel header.
+            const targetY = stageHeight * 0.3;
+            const targetSize = Math.max(stageHeight * 0.2,
+                Math.min(beamDiameter * 0.5, stageHeight * 0.46));
+            // The column stops under the medallion, so the disc reads as its
+            // cap and the word is never cut by a rim.
+            const beamHeight = Math.max(stageHeight * 0.12, beamBase - (targetY + targetSize * 0.42));
+
+            container.style.setProperty('--beam-size', beamDiameter + 'px');
+            container.style.setProperty('--beam-base-y', beamBase + 'px');
+            container.style.setProperty('--beam-height', beamHeight + 'px');
+            container.style.setProperty('--target-size', targetSize + 'px');
+            container.style.setProperty('--target-y', targetY + 'px');
 
             const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, maxRadius);
             bgGrad.addColorStop(0, `rgba(${theme.accentRgb}, 0.02)`);
@@ -3302,7 +3382,7 @@
         // perspective camera, so screen points no longer map linearly onto the
         // canvas. These four values mirror the --floor-* custom properties and
         // are used to invert the projection for the pointer.
-        const FLOOR_PROJECTION = { tiltDeg: 62, scale: 0.98, centerY: 0.64, camera: 1600 };
+        const FLOOR_PROJECTION = { tiltDeg: 62, scale: 0.98, centerY: 0.78, camera: 1600 };
 
         function applyFloorProjection() {
             const container = document.getElementById('cogwheelContainer');
@@ -4099,6 +4179,9 @@
                 sel.value = String(layer);
                 updateRingSpeedDisplay();
             }
+            // The column and the target circle ride the selected ring, so the
+            // wheel is redrawn here even when nothing is spinning.
+            drawCogwheel(currentTarget);
             refreshScreens();
         }
 
@@ -4723,9 +4806,10 @@
             if (!stage || !container) return;
             const rect = stage.getBoundingClientRect();
             if (!rect.width || !rect.height) return;
-            // Sit the floor just below the middle of the stage, so the target
-            // wheel and its light column have headroom above the pyramid.
-            FLOOR_PROJECTION.centerY = 0.58;
+            // Sit the plate low in the stage, so the column and the target
+            // wheel have a clear stretch of air between themselves and the
+            // pyramid below.
+            FLOOR_PROJECTION.centerY = 0.78;
             applyFloorProjection();
         }
 
