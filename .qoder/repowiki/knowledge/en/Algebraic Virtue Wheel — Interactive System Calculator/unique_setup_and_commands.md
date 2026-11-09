@@ -1,0 +1,1 @@
+No build step — open `Alg_Virt_WhLL.html` directly in a modern browser. No server required; localStorage may be unavailable in some contexts but is wrapped in try/catch so the app still runs.

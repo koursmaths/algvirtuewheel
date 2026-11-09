@@ -1,0 +1,5 @@
+- State keys are composite strings built from the current target and a numeric layer (e.g. `${currentTarget}_${layer}`) used consistently across `ringFillLevels`, `ringAngles`, and `ringSpeeds`.
+- Event handlers for every button follow the same shape: `function(e){ e.preventDefault(); e.stopPropagation(); ... }` before mutating state and calling `refreshAll()`.
+- Theming is centralized: CSS defines color tokens as `--var`s under `body[data-theme="..."]` selectors, and JS reads colors through `getThemePalette()` returning a `THEMES` entry rather than hard-coding hex values at draw sites.
+- Animation loops are driven by `setInterval` paired with explicit cleanup: both the cogwheel tick loop (`ensureCogwheelLoop`) and the stack auto-spin interval clear their timers when toggled off.
+- The value graph is traversed recursively via `resolveDeps(name, visited)` with a `visited` Set to break cycles, and `getOrderedDependencies` wraps it to deduplicate while preserving first-seen order.

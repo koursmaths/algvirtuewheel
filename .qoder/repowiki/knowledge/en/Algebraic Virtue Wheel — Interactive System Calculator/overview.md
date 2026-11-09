@@ -1,0 +1,1 @@
+A single-page interactive visualization that models a hierarchy of virtues as concentric spinning cogwheel rings and a draggable 3D stack, computing emergent 'derived qualities' from fill levels and spin speeds.

@@ -1,0 +1,6 @@
+Single self-contained HTML file with no external dependencies. Internal layout is split into three conceptual layers:
+- Data model: `valueAlgebra` (24 virtue nodes keyed by name, each declaring `components`, `color`, `desc`, `layer`) plus an `antagonists` lookup mapping each virtue to its opposite.
+- State layer: module-level variables (`cogwheelRotation`, `zoomFactor`, `ringFillLevels`, `ringAngles`, `ringSpeeds`, `currentTarget`, `stackItems`, `stackRotX/Y/Zoom`, `autoRotate`, `stackSpin`) mutated by event handlers and read by renderers.
+- Presentation layer: two panels sharing state — a `<canvas>` cogwheel renderer (`drawCogwheel`, `hitTestRing`, `angleToFill`) and a DOM-based 3D stack (`buildStack`, `renderStack3D`, `applyStackTransform`).
+
+Dependency direction is one-way: UI event handlers → state mutators → `refreshAll()` → renderers + `updateDerivedQuality()` + `updateMathOutput()`. The derived-quality computation (`computeDerivedQuality`) is the sole business logic combining ring fills/spins into a signed score that selects either a positive or antagonist virtue via deterministic hashing. Theming is decoupled through CSS custom properties on `body[data-theme]` plus a JS `THEMES` palette; fullscreen support uses the Fullscreen API with WebKit fallbacks. A monospaced telemetry panel renders ASCII-bordered logs of the current algebra state.

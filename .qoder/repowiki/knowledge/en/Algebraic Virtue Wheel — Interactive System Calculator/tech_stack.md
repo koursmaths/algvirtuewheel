@@ -1,0 +1,1 @@
+Vanilla HTML5 + CSS3 + ES6 JavaScript in a single `.html` file; rendering uses Canvas 2D for the cogwheel and CSS `transform-style: preserve-3d` for the stack; fullscreen via `requestFullscreen` / `webkitRequestFullscreen`; theme persistence via `localStorage`.
