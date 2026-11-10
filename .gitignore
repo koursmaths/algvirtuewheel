@@ -1,3 +1,8 @@
+# Local working copy of the console. The repository publishes the same
+# file as index.html (the name static hosts serve); this is the name kept
+# on disk for day-to-day editing, so it stays out of the repo.
+Alg_Virt_WhLL.html
+
 # Qoder IDE local browser profile used for headless screenshot checks.
 # It holds cookies, session storage and cache databases, so it must never
 # be committed.
